@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Gotion</title>
+    <link rel="stylesheet" href="./main.css"/>
+</head>
+<body>
+    <div id="app" class="gotion-shell">
+        <div id="loader" class="loader-container">
+            <div class="gotion-logo">
+                <svg viewBox="0 0 100 100" class="logo-icon" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="22" fill="#252525"/>
+                    <path d="M28 72V28L52 60V28H72V72L48 40V72H28Z" fill="#FFFFFF"/>
+                </svg>
+            </div>
+            <div class="spinner-wrapper">
+                <div class="spinner"></div>
+            </div>
+            <p id="status-text" class="status-message">Connecting to Notion...</p>
+        </div>
+
+        <div id="error-container" class="error-container hidden">
+            <div class="error-icon">⚠️</div>
+            <h2>Unable to Connect</h2>
+            <p id="error-details">Could not reach Notion servers. Please check your network connection.</p>
+            <div class="error-actions">
+                <button id="retry-btn" class="btn btn-primary" onclick="retryConnection()">Retry Connection</button>
+            </div>
+        </div>
+    </div>
+    <script src="./main.js"></script>
+</body>
+</html>

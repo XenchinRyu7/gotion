@@ -1,0 +1,17 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "gotion",
+  "outputfilename": "gotion",
+  "wailsjsdir": "./frontend",
+  "author": {
+    "name": "ryandaaa",
+    "email": "ryanda.valents3649@student.unri.ac.id"
+  },
+  "info": {
+    "companyName": "Gotion Project",
+    "productName": "Gotion - Lightweight Notion Client",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright (c) 2026 Gotion",
+    "comments": "Lightweight Notion Desktop Client powered by Wails & WebView2"
+  }
+}

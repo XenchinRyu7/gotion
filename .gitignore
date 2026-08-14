@@ -1,0 +1,41 @@
+# Binaries and Build Output
+build/bin/
+bin/
+dist/
+*.exe
+*.exe~
+*.exe.manifest
+*.dll
+*.so
+*.dylib
+*.msi
+
+# Wails Temporary & Generated Files
+.wails/
+frontend/dist/
+build/windows/installer/wails_tools.nsh
+build/windows/installer/tmp/
+
+# Go Build & Dependency Cache
+*.test
+*.out
+vendor/
+
+# User Data & Cache Profiles
+profile/
+cache/
+logs/
+*.log
+
+# IDE & OS Specific
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node Modules (if any frontend tools used)
+node_modules/
