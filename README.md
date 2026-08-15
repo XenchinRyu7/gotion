@@ -19,6 +19,19 @@ A high-performance, native desktop wrapper for Notion built with **Go**, **Wails
 
 The official Notion Desktop client relies on **Electron**, packaging an entire Node.js runtime and full Chromium browser instance into the application. This typically consumes **700 MB to 1.4 GB+ of RAM**, runs multiple redundant background helper processes, and introduces noticeable startup latency.
 
+<table>
+  <tr>
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/f6cf9433-9962-448b-90b4-3f2e1b27cd4b" alt="1" style="width: 100%; height: auto;" />
+    </td>
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/972e6f70-3b2e-4938-abd1-7040c4d26cee" alt="2" style="width: 100%; height: auto;" />
+    </td>
+  </tr>
+</table>
+
+
+
 **Gotion** replaces the heavy Electron shell with a lightweight Go backend that embeds the genuine Notion web application (`https://app.notion.com`) inside your operating system's native web engine:
 
 ```
