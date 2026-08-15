@@ -1,64 +1,88 @@
 <div align="center">
 
 # 🪶 Gotion
-### *The Ultra-Lightweight, Privacy-Respecting Desktop Client for Notion*
+### *The Ultra-Lightweight, Cross-Platform Desktop Client for Notion*
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Wails v2](https://img.shields.io/badge/Wails-v2-DF1A5A?style=flat&logo=wails)](https://wails.io)
-[![WebView2](https://img.shields.io/badge/Runtime-Microsoft%20Edge%20WebView2-0078D7?style=flat&logo=microsoftedge)](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-blue?style=flat&logo=windows)](https://microsoft.com)
+[![Runtime](https://img.shields.io/badge/Runtime-WebView2%20%7C%20WebKitGTK%20%7C%20WKWebView-0078D7?style=flat)](https://wails.io)
+[![Platforms](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-blue?style=flat)](https://github.com)
 [![Installer Size](https://img.shields.io/badge/Installer-~6.4%20MB-success?style=flat)](https://github.com)
 
-A high-performance native Windows desktop wrapper for Notion built with **Go**, **Wails v2**, and **Microsoft Edge WebView2**. Zero bundled Chromium bloat, zero background telemetry overhead, and ultra-low RAM consumption (< 400 MB).
+A high-performance, native desktop wrapper for Notion built with **Go**, **Wails v2**, and native operating system web engines (**Microsoft Edge WebView2** on Windows, **WebKitGTK** on Linux, and **WKWebView** on macOS). Zero bundled Chromium bloat, zero background telemetry overhead, and ultra-low memory consumption (< 400 MB).
 
 ---
 
 </div>
 
-## Why Gotion?
+## Overview
 
-The official Notion Desktop application uses **Electron**, which bundles an entire Node.js runtime and full Chromium instance into your PC. This often consumes **700 MB to 1.4 GB+ of RAM**, runs dozens of background processes, and tracks continuous telemetry events.
+The official Notion Desktop client relies on **Electron**, packaging an entire Node.js runtime and full Chromium browser instance into the application. This typically consumes **700 MB to 1.4 GB+ of RAM**, runs multiple redundant background helper processes, and introduces noticeable startup latency.
 
-**Gotion** solves this by embedding Notion's genuine web workspace inside Windows' native **WebView2** runtime combined with Go native optimizations:
+**Gotion** replaces the heavy Electron shell with a lightweight Go backend that embeds the genuine Notion web application (`https://app.notion.com`) inside your operating system's native web engine:
 
-| Feature | Official Notion Client (Electron) | Gotion |
-| :--- | :--- | :--- |
-| **RAM Usage** | ~700 MB – 1.4 GB+ | **< 400 MB** *(with active Win32 Working Set Trimmer)* |
-| **Installer Size** | ~110 MB+ | **~6.4 MB** *(NSIS Compressed)* |
-| **Telemetry & Trackers** | Active (Segment, Intercom, Datadog RUM) | **Blocked & Mocked (0ms overhead)** |
-| **Startup Speed** | Slow / Heavy Bundle Load | **Near-Instant** *(Persistent 300MB Disk Cache)* |
-| **Sidebar** | Promo banners ("Notion Desktop") | **Clean & Distraction-Free** |
-| **Window Frame** | Standard Windows Titlebar | **Mac-Style Minimalist Frameless Titlebar** |
-| **Theme Sync** | Manual / Desynced Window Chrome | **Real-Time Dynamic Notion Light & Dark Sync** |
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Gotion Desktop Shell                            │
+│     (Go Runtime + Wails v2 + Native Frameless Window Architecture)     │
+├────────────────────────────────────────────────────────────────────────┤
+│                      Native OS Web Engine                              │
+│   Windows: WebView2   |   Linux: WebKit2GTK   |   macOS: WKWebView     │
+├────────────────────────────────────────────────────────────────────────┤
+│                       Notion Web Workspace                             │
+│       (https://app.notion.com + Persistent Local Profile Cache)        │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Key Features
+## Performance Comparison
 
-### 1. Frameless Titlebar & Window Controls
-* **Mac-Style Traffic Lights:** Custom close (`#ff5f56`), minimize (`#ffbd2e`), and maximize (`#27c93f`) window controls with bidirectional maximize/restore toggling.
-* **8-Direction Native Resizing:** Smooth resizing handles along all borders and corners (`N`, `S`, `E`, `W`, `NE`, `NW`, `SE`, `SW`).
-* **Titlebar Counter-Scaling:** Keeps the title bar locked at an exact physical **38px** height during native zoom scaling.
+| Metric / Feature | Official Notion Client (Electron) | Gotion |
+| :--- | :--- | :--- |
+| **Memory Footprint (Idle / Active)** | ~700 MB – 1.4 GB+ | **< 400 MB** *(with active Win32 Working Set Trimming)* |
+| **Binary / Installer Size** | ~110 MB+ | **~6.4 MB** *(Windows NSIS Compressed)* |
+| **Background Telemetry** | Active third-party analytics | **Cleaned & Minimalist** |
+| **Startup Time** | Slow / Cold bundle parsing | **Near-Instant** *(Persistent 300MB Local Disk Cache)* |
+| **Multi-Account Support** | Supported | **Supported** *(Direct workspace switching)* |
+| **Window Frame** | Standard OS Window Chrome | **Custom Frameless Titlebar with Mac-Style Controls** |
+| **Theme Synchronization** | Manual / Desynced Window Titlebar | **Real-Time Dynamic Light & Dark Theme Detection** |
+| **Supported Platforms** | Windows, macOS | **Windows 10/11, Linux (AppImage/Deb/Rpm), macOS** |
+
+---
+
+## Core Features
+
+### 1. Frameless Window with 8-Directional Native Resizing
+* **Mac-Style Traffic Lights:** Custom Close (`#ff5f56`), Minimize (`#ffbd2e`), and Maximize/Restore (`#27c93f`) window controls with bidirectional maximize toggling.
+* **8-Direction Resizing Handles:** Smooth resizing along all edges and corners (`N`, `S`, `E`, `W`, `NE`, `NW`, `SE`, `SW`).
+* **Titlebar Counter-Scaling:** Automatically computes `1 / zoomRatio` to ensure the custom 38px titlebar visually retains its physical dimensions during native engine zoom.
 
 ### 2. Real-Time Dynamic Theme Adaptation
-* Uses a 4-layer multi-tier luminance sampler (`detectNotionDarkTheme`) that directly inspects rendered Notion workspace elements (`.notion-frame`, `.notion-scroller`).
-* **Light Theme:** Notion Warm Paper (`#f6f5f4`) surface with hairline borders (`#e6e6e6`) and charcoal typography (`#31302e`).
-* **Dark Theme:** Notion Dark Surface (`#191919`) with dark charcoal borders (`#2c2c2c`) and soft off-white typography (`#e6e6e6`).
-* Toggling theme inside Notion (`Ctrl + Shift + L` or via Appearance settings) changes the titlebar **instantly without page reload**.
+* Features a 4-layer multi-tier luminance sampler (`detectNotionDarkTheme`) that directly inspects rendered workspace containers (`.notion-frame`, `.notion-scroller`):
+  * **Light Theme:** Notion Warm Paper (`#f6f5f4`) surface with hairline borders (`#e6e6e6`) and charcoal typography (`#31302e`).
+  * **Dark Theme:** Notion Dark Surface (`#191919`) with dark hairline borders (`#2c2c2c`) and soft off-white typography (`#e6e6e6`).
+* Toggling themes inside Notion (`Ctrl + Shift + L` or via Settings -> Appearance) updates the entire title bar instantly without requiring an application reload.
 
-### 3. Performance & Bloatware Stripper
-* Intercepts and blocks network requests to heavy tracking and analytics endpoints (`api.segment.io`, `api.mixpanel.com`, `browser-intake-datadoghq.com`, `widget.intercom.io`, `amplitude.com`, `notion.so/api/v3/logUserEvent`, `notion.so/api/v3/ping`).
-* Mocks tracking libraries (`window.analytics`, `window.Intercom`, `window.datadogRum`, `window.mixpanel`, `window.posthog`) with zero-cost no-op proxies.
-* Strips unwanted promo banners (*"Aplikasi Notion - Notion Desktop"*) from the sidebar.
+### 3. High-Performance Caching & Memory Optimization
+* **Dedicated Disk Caching:** Allocates 300 MB disk cache and 100 MB media cache in persistent profile storage, ensuring Notion's large bundle files load locally on startup.
+* **Working Set Memory Trimming:** Periodically flushes inactive standby memory pages out of physical RAM via native Win32 `EmptyWorkingSet` APIs on Windows.
+* **Go Runtime Tuning:** Configures proactive garbage collection (`debug.SetGCPercent(30)`) to maintain a lean memory footprint.
 
-### 4. Hardcore V8 Memory Cap & Win32 Working Set Trimmer
-* Restricts V8 JavaScript heap to 128 MB max with bytecode size optimization (`--js-flags="--max-old-space-size=128 --optimize-for-size"`).
-* Limits Chromium renderers to a single process (`--renderer-process-limit=1`).
-* Employs a background Win32 memory trimmer calling `EmptyWorkingSet` and `SetProcessWorkingSetSize` every 10 seconds across the main process and all child WebView2 processes, continuously reclaiming standby RAM.
+### 4. Clean Workspace Interface
+* Automatically removes promotional download banners (*"Aplikasi Notion - Notion Desktop"*) from the sidebar to provide a clean, native workspace feel.
 
-### 5. Aggressive Disk Caching & Persistent Profile
-* Allocates a dedicated 300 MB Chromium Disk Cache in `%APPDATA%\Gotion\Profile`.
-* Large Notion JavaScript bundles and IndexedDB stores are preserved locally for lightning-fast subsequent launches.
+### 5. Flexible Authentication System
+* **Native In-App OAuth:** Supports direct login via Google, Apple, Microsoft, GitHub, Okta, Auth0, and SAML identity providers on Windows and macOS.
+* **Local Loopback Auth Bridge:** Built-in loopback authentication server (`internal/auth/server.go`) listening on `http://127.0.0.1:28795/login` for direct `token_v2` token import, export, and external browser authentication.
+
+> [!WARNING]
+> **Linux Authentication Requirement:**
+> Due to strict bot detection and embedded browser restrictions enforced by Google/Apple OAuth on WebKitGTK (`403: disallowed_useragent`), authentication on **Linux** is supported exclusively via **"Continue with Email" (Magic Link / OTP Code)** or direct session token import (`token_v2`) via the built-in Auth Bridge. Google SSO and Apple Sign-In work out-of-the-box on Windows and macOS.
+
+### 6. Safe Navigation Routing
+* Notion workspaces and identity provider authentication domains remain inside the application window.
+* External outbound links are automatically intercepted and routed to the operating system's default web browser.
 
 ---
 
@@ -69,41 +93,106 @@ The official Notion Desktop application uses **Electron**, which bundles an enti
 | <kbd>Alt</kbd> + <kbd>←</kbd> | Navigate Back in History |
 | <kbd>Alt</kbd> + <kbd>→</kbd> | Navigate Forward in History |
 | <kbd>Ctrl</kbd> + <kbd>R</kbd> / <kbd>F5</kbd> | Reload Page |
-| <kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>=</kbd> | Zoom In (Native Engine Zoom) |
-| <kbd>Ctrl</kbd> + <kbd>-</kbd> | Zoom Out (Native Engine Zoom) |
+| <kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>=</kbd> | Zoom In |
+| <kbd>Ctrl</kbd> + <kbd>-</kbd> | Zoom Out |
 | <kbd>Ctrl</kbd> + <kbd>0</kbd> | Reset Zoom to 100% |
-| <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd> | Smooth Low-Level Native Zoom |
+| <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd> | Smooth Native Engine Zoom |
 | <kbd>F11</kbd> | Maximize / Restore Window |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> | Toggle Notion Light / Dark Mode |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> | Toggle Notion Light / Dark Theme |
 | <kbd>Alt</kbd> + <kbd>F4</kbd> | Quit Application |
 
 ---
 
-## Requirements & Building
+## Cross-Platform Storage & Profiles
+
+Gotion isolates user data into persistent profile directories so login sessions, cookies, and local caches survive restarts:
+
+| Platform | Profile & Cache Directory | Configuration Directory |
+| :--- | :--- | :--- |
+| **Windows** | `%LOCALAPPDATA%\Gotion\profile` | `%LOCALAPPDATA%\Gotion\config` |
+| **Linux** | `~/.config/Gotion/profile` | `~/.config/Gotion/config` |
+| **macOS** | `~/Library/Application Support/Gotion/profile` | `~/Library/Application Support/Gotion/config` |
+
+---
+
+## Building and Packaging
 
 ### Prerequisites
+
+#### Windows
 * **Windows 10 / 11** (64-bit)
 * **Go 1.21+**
 * **Wails CLI v2** (`go install github.com/wailsapp/wails/v2/cmd/wails@latest`)
-* **NSIS** *(optional, for generating the Windows installer)*
+* **NSIS** *(required for compiling the `.exe` setup installer)*
 
-### Development
-Run Gotion in live development mode with hot reload:
-```powershell
-wails dev
-```
+#### Linux
+* **Go 1.21+**
+* **Wails CLI v2**
+* **GTK3 & WebKitGTK Development Headers**:
+  * **Debian / Ubuntu / Linux Mint:**
+    ```bash
+    sudo apt update
+    sudo apt install build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.0-dev
+    ```
+    *(For modern distributions with WebKitGTK 4.1: `libwebkit2gtk-4.1-dev`)*
+  * **Arch Linux / Manjaro:**
+    ```bash
+    sudo pacman -S base-devel gtk3 webkit2gtk
+    ```
+  * **Fedora / RHEL:**
+    ```bash
+    sudo dnf install gcc-c++ gtk3-devel webkit2gtk4.0-devel
+    ```
 
-### Standalone Production Binary
-Compile an ultra-optimized standalone executable (`build\bin\gotion.exe`):
+#### macOS
+* **macOS 11.0+** (Apple Silicon or Intel)
+* **Xcode Command Line Tools** (`xcode-select --install`)
+* **Go 1.21+** and **Wails CLI v2**
+
+---
+
+### Local Build Commands
+
+#### Windows
 ```powershell
+# Build standalone executable (build/bin/gotion.exe)
 wails build -ldflags "-s -w"
-```
 
-### NSIS Setup Installer (~6.4 MB)
-Compile the standalone executable and package it into a Windows NSIS Setup Installer (`build\bin\gotion-amd64-installer.exe`):
-```powershell
+# Build executable + compressed NSIS setup installer (build/bin/gotion-amd64-installer.exe)
 wails build -nsis -ldflags "-s -w"
 ```
+
+#### Linux
+```bash
+# Build native Linux binary (build/bin/gotion)
+wails build -platform linux/amd64 -ldflags "-s -w"
+```
+
+#### macOS
+```bash
+# Build Universal macOS Application Bundle (build/bin/gotion.app)
+wails build -platform darwin/universal -ldflags "-s -w"
+```
+
+---
+
+## Automated Multi-Platform Releases (GitHub Actions)
+
+Gotion includes a production-ready CI/CD pipeline in [`.github/workflows/release.yml`](.github/workflows/release.yml). Pushing a semantic version tag (e.g. `v1.0.0`) or triggering the workflow manually automatically compiles and publishes packages for all major operating systems:
+
+* **Windows:**
+  * `gotion-windows-amd64.exe` (Standalone Portable Executable)
+  * `gotion-windows-amd64-installer.exe` (NSIS Setup Wizard)
+* **Linux:**
+  * `gotion-1.0.0-x86_64.AppImage` (Universal Portable AppImage)
+  * `gotion_1.0.0_amd64.deb` (Debian, Ubuntu, Pop!_OS, Mint)
+  * `gotion-1.0.0.x86_64.rpm` (Fedora, RHEL, openSUSE)
+  * `gotion-linux-amd64.tar.gz` (Standard ELF Tarball)
+* **macOS:**
+  * `gotion-1.0.0-macos-universal.dmg` (Drag-and-Drop Disk Image)
+  * `gotion-macos-universal.zip` (Universal Application Bundle)
+* **Checksums:**
+  * `SHA256SUMS.txt` (Automated verification digests)
 
 ---
 
@@ -111,34 +200,40 @@ wails build -nsis -ldflags "-s -w"
 
 ```
 gotion/
-├── app.go                  # Lifecycle, Win32 zoom synthesis, working set memory trimmer
-├── main.go                 # Wails options, Chromium & V8 arguments, window config
-├── wails.json              # Wails project config and product metadata
+├── .github/workflows/      # Automated multi-platform CI/CD release pipeline (release.yml)
+├── app.go                  # Core application lifecycle, window state, zoom and auth bindings
+├── app_windows.go          # Windows-specific memory trimmer and native mouse input synthesis
+├── app_linux.go            # Linux-specific WebKitGTK persistent cookie storage with SQLite
+├── app_other.go            # Fallback handlers for macOS and other platforms
+├── main.go                 # Application entrypoint, Wails initialization, WebView2 options
+├── wails.json              # Wails project config, metadata, and packaging flags
+├── icon.png                # Master high-resolution application icon
 ├── internal/
-│   ├── config/             # Window state persistence (dimensions, position, maximized state)
-│   ├── navigation/         # URL routing policies & auth host whitelist
-│   ├── profile/            # User profile data directory resolver (%APPDATA%\Gotion\Profile)
-│   └── script/             # Injected JS & CSS (theme observer, tracker stripper, titlebar)
+│   ├── auth/               # Loopback authentication server & token_v2 bridge (port 28795)
+│   ├── config/             # Window geometry state and session token persistence
+│   ├── navigation/         # URL routing policy, authentication domain whitelist, and link delegation
+│   ├── profile/            # Cross-platform persistent profile directory resolver
+│   └── script/             # Injected client script (dynamic theme observer, custom titlebar, shortcuts)
 ├── build/
-│   ├── appicon.png         # Main application icon
-│   ├── windows/            # Windows manifest, info.json, and icon.ico
-│   │   └── installer/      # NSIS installer script (project.nsi)
-│   └── bin/                # Compiled binaries and installer output
-└── frontend/               # Frontend asset server directory
+│   ├── appicon.png         # Resampled 512x512 application icon
+│   ├── windows/            # Windows manifest, info.json metadata, and multi-resolution icon.ico
+│   │   └── installer/      # Nullsoft Scriptable Install System (NSIS) setup script (project.nsi)
+│   └── bin/                # Compiled binary outputs and installer executables
+└── frontend/               # Local asset server directory (fallback splash screen and loader)
 ```
 
 ---
 
-## Security & Privacy
+## Security & Privacy Architecture
 
-* **Strict Navigation Isolation:** Notion workspaces and identity providers (Google, Apple, Microsoft, GitHub) stay inside the desktop client; external outbound links are intercepted and routed to the user's default system browser.
-* **Telemetry Stripping:** Telemetry calls are blocked locally on the client before leaving the machine.
-* **Encrypted Storage:** WebView2 credentials and session cookies are stored securely in the user's local Windows DPAPI-protected profile directory.
+* **Isolated Outbound Traffic:** Outbound links that do not belong to Notion or authorized identity providers are blocked from executing in the internal webview and delegated to the default system browser.
+* **Local Session Storage:** Session cookies and local storage are persisted strictly on the user's local machine inside the user-owned config/profile directory.
+* **Zero Telemetry Proxying:** No proxy servers or intermediate logging services are used; all network traffic communicates directly with Notion's official endpoints (`*.notion.com` / `*.notion.so`).
 
 ---
 
 ## License & Disclaimer
 
-This project is open-source under the [MIT License](LICENSE).
+Distributed under the [MIT License](LICENSE).
 
-> **Disclaimer:** Gotion is an unofficial third-party desktop client and is not affiliated with, maintained, sponsored, or endorsed by Notion Labs, Inc. Notion and the Notion logo are registered trademarks of Notion Labs, Inc.
+> **Disclaimer:** Gotion is an independent, unofficial desktop client and is not affiliated with, sponsored by, maintained by, or endorsed by Notion Labs, Inc. "Notion" is a registered trademark of Notion Labs, Inc.

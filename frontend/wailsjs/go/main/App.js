@@ -10,6 +10,10 @@ export function GetAppVersion() {
   return window['go']['main']['App']['GetAppVersion']();
 }
 
+export function GetSessionToken() {
+  return window['go']['main']['App']['GetSessionToken']();
+}
+
 export function GetStartURL() {
   return window['go']['main']['App']['GetStartURL']();
 }
@@ -34,6 +38,10 @@ export function IsInternalURL(arg1) {
   return window['go']['main']['App']['IsInternalURL'](arg1);
 }
 
+export function Logout() {
+  return window['go']['main']['App']['Logout']();
+}
+
 export function Minimise() {
   return window['go']['main']['App']['Minimise']();
 }
@@ -54,8 +62,20 @@ export function ResetZoom() {
   return window['go']['main']['App']['ResetZoom']();
 }
 
+export function ReturnToInternalFrontend() {
+  return window['go']['main']['App']['ReturnToInternalFrontend']();
+}
+
 export function SaveCurrentWindowState() {
   return window['go']['main']['App']['SaveCurrentWindowState']();
+}
+
+export function SetSessionToken(arg1) {
+  return window['go']['main']['App']['SetSessionToken'](arg1);
+}
+
+export function StartBrowserLogin() {
+  return window['go']['main']['App']['StartBrowserLogin']();
 }
 
 export function ToggleMaximise() {

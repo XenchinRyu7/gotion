@@ -7,75 +7,123 @@ package script
 func GetInjectionScript() string {
 	return `
 (function() {
-    // 0. Performance & Bloatware Stripper (Save ~50-80MB RAM & CPU cycles)
-    if (!window.__gotion_bloatware_stripped__) {
-        window.__gotion_bloatware_stripped__ = true;
+    var host = window.location.hostname.toLowerCase();
+    var isNotionDomain = host === "app.notion.com" || host.endsWith(".notion.com") ||
+                         host === "notion.so" || host.endsWith(".notion.so") ||
+                         host === "notion.site" || host.endsWith(".notion.site") ||
+                         host === "notionusercontent.com" || host.endsWith(".notionusercontent.com");
 
-        // Mock tracking libraries as no-op dummies so Notion doesn't crash or lag
-        var noop = function() {};
-        var dummyTracker = new Proxy(noop, {
-            get: function(target, prop) {
-                if (prop === "on" || prop === "off" || prop === "once" || prop === "ready") {
-                    return function(cb) { if (typeof cb === 'function') cb(); return dummyTracker; };
+    // 0. User-Agent compatibility fix for Google OAuth & Notion Web
+    try {
+        var chromeUA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
+        if (navigator.userAgent !== chromeUA) {
+            Object.defineProperty(navigator, 'userAgent', { get: function() { return chromeUA; }, configurable: true });
+            Object.defineProperty(navigator, 'appVersion', { get: function() { return "5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"; }, configurable: true });
+            Object.defineProperty(navigator, 'vendor', { get: function() { return "Google Inc."; }, configurable: true });
+        }
+    } catch (e) {}
+
+    // 1. Popup & Window.Open Interceptor (Prevents Notion "Browser is blocking pop-ups" warning)
+    if (isNotionDomain && !window.__gotion_popup_interceptor__) {
+        window.__gotion_popup_interceptor__ = true;
+
+        function isNotionOnlyUrl(rawUrl) {
+            if (!rawUrl) return false;
+            try {
+                var u = new URL(rawUrl, window.location.href);
+                var h = u.hostname.toLowerCase();
+                if (h === "app.notion.com" || h.endsWith(".notion.com") ||
+                    h === "notion.so" || h.endsWith(".notion.so") ||
+                    h === "notion.site" || h.endsWith(".notion.site") ||
+                    h === "notionusercontent.com" || h.endsWith(".notionusercontent.com")) {
+                    return true;
                 }
-                return noop;
-            },
-            apply: function() { return dummyTracker; }
-        });
-
-        try {
-            window.Intercom = noop;
-            window.analytics = dummyTracker;
-            window.datadogRum = dummyTracker;
-            window.mixpanel = dummyTracker;
-            window.posthog = dummyTracker;
-        } catch (e) {}
-
-        // Block heavy tracking and telemetry endpoints
-        var blockedEndpoints = [
-            "api.segment.io",
-            "api.mixpanel.com",
-            "browser-intake-datadoghq.com",
-            "widget.intercom.io",
-            "amplitude.com",
-            "api/v3/logUserEvent",
-            "api/v3/ping"
-        ];
-
-        // Intercept window.fetch
-        var originalFetch = window.fetch;
-        if (originalFetch) {
-            window.fetch = function(input, init) {
-                var url = typeof input === "string" ? input : (input && input.url ? input.url : "");
-                if (url) {
-                    for (var i = 0; i < blockedEndpoints.length; i++) {
-                        if (url.indexOf(blockedEndpoints[i]) !== -1) {
-                            return Promise.resolve(new Response("{}", { status: 200, headers: { "Content-Type": "application/json" } }));
-                        }
-                    }
-                }
-                return originalFetch.apply(this, arguments);
-            };
+            } catch(e) {}
+            return false;
         }
 
-        // Intercept XMLHttpRequest
-        var originalXhrOpen = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function(method, url) {
-            this.__url = url;
-            return originalXhrOpen.apply(this, arguments);
-        };
-        var originalXhrSend = XMLHttpRequest.prototype.send;
-        XMLHttpRequest.prototype.send = function(body) {
-            var url = this.__url || "";
-            if (url) {
-                for (var i = 0; i < blockedEndpoints.length; i++) {
-                    if (url.indexOf(blockedEndpoints[i]) !== -1) {
-                        return;
-                    }
+        function showGotionToast(msg) {
+            var existing = document.getElementById("gotion-auth-toast");
+            if (existing) existing.remove();
+
+            var toast = document.createElement("div");
+            toast.id = "gotion-auth-toast";
+            toast.innerHTML = '<span style="font-size:15px;margin-right:8px;">🌐</span><span>' + msg + '</span>';
+            toast.setAttribute("style", "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#f0f0f0;padding:10px 18px;border-radius:8px;border:1px solid #3a3a3a;box-shadow:0 8px 30px rgba(0,0,0,0.6);font-size:13px;z-index:2147483647;display:flex;align-items:center;font-family:-apple-system,BlinkMacSystemFont,sans-serif;pointer-events:none;");
+            (document.body || document.documentElement).appendChild(toast);
+            setTimeout(function() {
+                if (toast && toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 6000);
+        }
+
+        var isNavigating = false;
+        function handleTargetNavigation(targetUrl) {
+            if (!targetUrl || targetUrl === "about:blank") return;
+            if (isNavigating) return;
+            isNavigating = true;
+            setTimeout(function() { isNavigating = false; }, 1000);
+
+            if (isNotionOnlyUrl(targetUrl)) {
+                window.location.href = targetUrl;
+            } else {
+                showGotionToast("Login opened in browser popup. (Or use 'Continue with email' to sign in directly here)");
+                if (window.go && window.go.main && window.go.main.App && window.go.main.App.OpenExternalURL) {
+                    window.go.main.App.OpenExternalURL(targetUrl);
+                } else if (window.runtime && window.runtime.BrowserOpenURL) {
+                    window.runtime.BrowserOpenURL(targetUrl);
                 }
             }
-            return originalXhrSend.apply(this, arguments);
+        }
+
+        function createMockWindow(initialUrl) {
+            var mock = {
+                closed: false,
+                name: "",
+                opener: window,
+                parent: window,
+                top: window,
+                focus: function() {},
+                blur: function() {},
+                close: function() { this.closed = true; },
+                postMessage: function(msg, origin) {
+                    window.postMessage(msg, origin || "*");
+                },
+                location: {
+                    _href: initialUrl || "",
+                    get href() { return this._href; },
+                    set href(val) {
+                        this._href = val;
+                        handleTargetNavigation(val);
+                    },
+                    replace: function(val) {
+                        this.href = val;
+                    },
+                    assign: function(val) {
+                        this.href = val;
+                    },
+                    toString: function() { return this._href; }
+                },
+                document: {
+                    write: function() {},
+                    writeln: function() {},
+                    open: function() {},
+                    close: function() {}
+                }
+            };
+            if (initialUrl && initialUrl !== "about:blank") {
+                handleTargetNavigation(initialUrl);
+            }
+            return mock;
+        }
+
+        window.open = function(url, target, features) {
+            return createMockWindow(url);
         };
+    }
+
+    // Only inject Notion titlebar and styles if we are on a Notion domain
+    if (!isNotionDomain) {
+        return;
     }
 
     var styleId = "gotion-notion-styles";
@@ -88,6 +136,26 @@ func GetInjectionScript() string {
             "a[href*='/desktop'],",
             "a[href*='notion.so/desktop'] {",
             "    display: none !important;",
+            "}",
+            "/* Fix Notion database table cell font clipping & cramped row height on Linux WebKitGTK */",
+            ".notion-table-view,",
+            ".notion-collection-item,",
+            ".notion-table-view-cell,",
+            "[data-block-id] {",
+            "    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Liberation Sans', sans-serif !important;",
+            "}",
+            ".notion-table-view-cell {",
+            "    overflow: visible !important;",
+            "}",
+            ".notion-table-view-cell > div,",
+            ".notion-table-view-cell [contenteditable] {",
+            "    line-height: 1.35 !important;",
+            "    min-height: 24px !important;",
+            "    display: flex !important;",
+            "    align-items: center !important;",
+            "}",
+            ".notion-table-view-row {",
+            "    min-height: 34px !important;",
             "}",
             "#gotion-mac-titlebar, #gotion-mac-titlebar.gotion-theme-light {",
             "    --gt-bg: #f6f5f4 !important;",
@@ -354,18 +422,59 @@ func GetInjectionScript() string {
     }
 
     function invokeNative(msg) {
-        if (window.chrome && window.chrome.webview && window.chrome.webview.postMessage) {
-            window.chrome.webview.postMessage(msg);
-        } else if (window.WailsInvoke) {
-            window.WailsInvoke(msg);
+        console.log("[Gotion IPC] invokeNative:", msg);
+        // 1. WebKitGTK (Linux) & WKWebView (macOS)
+        try {
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.external && window.webkit.messageHandlers.external.postMessage) {
+                window.webkit.messageHandlers.external.postMessage(msg);
+                return;
+            }
+        } catch(e) {}
+
+        // 2. WebView2 (Windows)
+        try {
+            if (window.chrome && window.chrome.webview && window.chrome.webview.postMessage) {
+                window.chrome.webview.postMessage(msg);
+                return;
+            }
+        } catch(e) {}
+
+        // 3. Wails legacy invoke
+        try {
+            if (window.WailsInvoke) {
+                window.WailsInvoke(msg);
+                return;
+            }
+        } catch(e) {}
+    }
+
+    function doClose() {
+        console.log("[Gotion JS] doClose called");
+        invokeNative("Q");
+        if (window.go && window.go.main && window.go.main.App && window.go.main.App.Close) {
+            window.go.main.App.Close();
+        } else if (window.runtime && window.runtime.Quit) {
+            window.runtime.Quit();
         }
     }
 
-    function triggerToggleMaximise() {
+    function doMinimise() {
+        console.log("[Gotion JS] doMinimise called");
+        invokeNative("Wm");
+        if (window.go && window.go.main && window.go.main.App && window.go.main.App.Minimise) {
+            window.go.main.App.Minimise();
+        } else if (window.runtime && window.runtime.WindowMinimise) {
+            window.runtime.WindowMinimise();
+        }
+    }
+
+    function doToggleMaximise() {
+        console.log("[Gotion JS] doToggleMaximise called");
+        invokeNative("Wt");
         if (window.go && window.go.main && window.go.main.App && window.go.main.App.ToggleMaximise) {
             window.go.main.App.ToggleMaximise();
-        } else {
-            invokeNative("Wt");
+        } else if (window.runtime && window.runtime.WindowToggleMaximise) {
+            window.runtime.WindowToggleMaximise();
         }
     }
 
@@ -380,38 +489,73 @@ func GetInjectionScript() string {
         zoomOut: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>',
         resetZoom: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
         maximize: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>',
+        user: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
         quit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
     };
 
-    function emitWailsEvent(name) {
-        invokeNative('EE{"name":"' + name + '"}');
+    // Zoom Manager (Client-side CSS zoom level)
+    var zoomLevels = [0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.25, 1.35, 1.5, 1.75, 2.0];
+    var zoomIndex = 6; // default 1.0
+
+    try {
+        var savedZ = localStorage.getItem("gotion_zoom_factor");
+        if (savedZ) {
+            var f = parseFloat(savedZ);
+            for (var zi = 0; zi < zoomLevels.length; zi++) {
+                if (Math.abs(zoomLevels[zi] - f) < 0.01) {
+                    zoomIndex = zi;
+                    break;
+                }
+            }
+        }
+    } catch(e) {}
+
+    function applyZoom() {
+        var factor = zoomLevels[zoomIndex];
+        console.log("[Gotion Zoom] Applying zoom level:", factor);
+        
+        var target = document.getElementById("notion-app") || document.body;
+        if (target) {
+            target.style.zoom = factor;
+        }
+
+        var bar = document.getElementById("gotion-mac-titlebar");
+        if (bar) {
+            bar.style.zoom = 1.0;
+        }
+
+        showGotionToast("Zoom: " + Math.round(factor * 100) + "%");
+
+        try {
+            localStorage.setItem("gotion_zoom_factor", factor.toString());
+        } catch(e) {}
     }
 
     function triggerZoomIn() {
-        console.log("[Gotion JS] triggerZoomIn called.");
-        emitWailsEvent("zoom:in");
-        if (window.go && window.go.main && window.go.main.App && window.go.main.App.ZoomIn) {
-            window.go.main.App.ZoomIn();
+        if (zoomIndex < zoomLevels.length - 1) {
+            zoomIndex++;
+            applyZoom();
         }
     }
 
     function triggerZoomOut() {
-        console.log("[Gotion JS] triggerZoomOut called.");
-        emitWailsEvent("zoom:out");
-        if (window.go && window.go.main && window.go.main.App && window.go.main.App.ZoomOut) {
-            window.go.main.App.ZoomOut();
+        if (zoomIndex > 0) {
+            zoomIndex--;
+            applyZoom();
         }
     }
 
     function triggerResetZoom() {
-        console.log("[Gotion JS] triggerResetZoom called.");
-        emitWailsEvent("zoom:reset");
-        if (window.go && window.go.main && window.go.main.App && window.go.main.App.ResetZoom) {
-            window.go.main.App.ResetZoom();
-        }
+        zoomIndex = 6; // 1.0
+        applyZoom();
     }
 
-    var lastHeaderClickTime = 0;
+    window.__gotion_triggerZoomIn = triggerZoomIn;
+    window.__gotion_triggerZoomOut = triggerZoomOut;
+    window.__gotion_triggerResetZoom = triggerResetZoom;
+
+    // Apply saved zoom on startup
+    setTimeout(applyZoom, 200);
 
     // 2. Ensure Titlebar DOM is present
     if (!document.getElementById("gotion-mac-titlebar")) {
@@ -419,15 +563,8 @@ func GetInjectionScript() string {
         bar.id = "gotion-mac-titlebar";
         bar.setAttribute("style", "--wails-draggable: drag;");
 
-        // Double-click toggles maximize
-        bar.addEventListener("dblclick", function(e) {
-            if (e.target.closest("button") || e.target.closest(".gotion-dropdown") || e.target.closest(".gotion-no-drag")) {
-                return;
-            }
-            triggerToggleMaximise();
-        });
-
-        // Left mouse down initiates drag
+        // Double-click detection & native window drag
+        var lastTitlebarClickTime = 0;
         bar.addEventListener("mousedown", function(e) {
             if (e.target.closest("button") || e.target.closest(".gotion-dropdown") || e.target.closest(".gotion-no-drag")) {
                 return;
@@ -435,13 +572,26 @@ func GetInjectionScript() string {
             if (e.button !== 0) return;
 
             var now = Date.now();
-            if (now - lastHeaderClickTime < 350) {
-                lastHeaderClickTime = 0;
-                triggerToggleMaximise();
+            if (now - lastTitlebarClickTime < 350) {
+                lastTitlebarClickTime = 0;
+                e.preventDefault();
+                e.stopPropagation();
+                doToggleMaximise();
                 return;
             }
-            lastHeaderClickTime = now;
+            lastTitlebarClickTime = now;
+
+            // Trigger GTK / Windows native window drag
             invokeNative("drag");
+        });
+
+        bar.addEventListener("dblclick", function(e) {
+            if (e.target.closest("button") || e.target.closest(".gotion-dropdown") || e.target.closest(".gotion-no-drag")) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            doToggleMaximise();
         });
 
         // Left Group (Traffic Lights)
@@ -455,20 +605,22 @@ func GetInjectionScript() string {
         var btnClose = document.createElement("button");
         btnClose.className = "gotion-btn-traffic gotion-btn-close";
         btnClose.title = "Close (Ctrl+Q / Alt+F4)";
-        btnClose.innerHTML = '<svg width="6" height="6" viewBox="0 0 6 6"><line x1="1" y1="1" x2="5" y2="5" stroke="#4d0000" stroke-width="1" stroke-linecap="round"/><line x1="5" y1="1" x2="1" y2="5" stroke="#4d0000" stroke-width="1" stroke-linecap="round"/></svg>';
+        btnClose.innerHTML = '<svg width="6" height="6" viewBox="0 0 6 6"><line x1="1" y1="1" x2="5" y2="5" stroke="#4d0000" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="1" x2="1" y2="5" stroke="#4d0000" stroke-width="1.2" stroke-linecap="round"/></svg>';
         btnClose.onclick = function(e) {
+            e.preventDefault();
             e.stopPropagation();
-            invokeNative("Q");
+            doClose();
         };
 
         // Minimize
         var btnMin = document.createElement("button");
         btnMin.className = "gotion-btn-traffic gotion-btn-min";
         btnMin.title = "Minimize";
-        btnMin.innerHTML = '<svg width="6" height="6" viewBox="0 0 6 6"><line x1="1" y1="3" x2="5" y2="3" stroke="#664400" stroke-width="1" stroke-linecap="round"/></svg>';
+        btnMin.innerHTML = '<svg width="6" height="6" viewBox="0 0 6 6"><line x1="1" y1="3" x2="5" y2="3" stroke="#664400" stroke-width="1.2" stroke-linecap="round"/></svg>';
         btnMin.onclick = function(e) {
+            e.preventDefault();
             e.stopPropagation();
-            invokeNative("Wm");
+            doMinimise();
         };
 
         // Maximize
@@ -477,8 +629,9 @@ func GetInjectionScript() string {
         btnMax.title = "Maximize / Restore";
         btnMax.innerHTML = '<svg width="6" height="6" viewBox="0 0 6 6"><polygon points="1,1 5,1 1,5" fill="#004d00"/><polygon points="5,5 1,5 5,1" fill="#004d00"/></svg>';
         btnMax.onclick = function(e) {
+            e.preventDefault();
             e.stopPropagation();
-            triggerToggleMaximise();
+            doToggleMaximise();
         };
 
         trafficLights.appendChild(btnClose);
@@ -572,8 +725,15 @@ func GetInjectionScript() string {
         divider2.className = "gotion-menu-divider";
         dropdownContent.appendChild(divider2);
 
-        dropdownContent.appendChild(createMenuItem(icons.maximize, "Maximize / Restore", "F11", function() { triggerToggleMaximise(); }));
-        dropdownContent.appendChild(createMenuItem(icons.quit, "Quit Gotion", "Alt+F4", function() { invokeNative("Q"); }));
+        dropdownContent.appendChild(createMenuItem(icons.maximize, "Maximize / Restore", "F11", function() { doToggleMaximise(); }));
+        dropdownContent.appendChild(createMenuItem(icons.user, "Switch Account / Login", "", function() {
+            if (window.go && window.go.main && window.go.main.App && window.go.main.App.Logout) {
+                window.go.main.App.Logout();
+            } else if (window.runtime && window.runtime.WindowReloadApp) {
+                window.runtime.WindowReloadApp();
+            }
+        }));
+        dropdownContent.appendChild(createMenuItem(icons.quit, "Quit Gotion", "Alt+F4", function() { doClose(); }));
 
         dropdown.appendChild(dropdownBtn);
         dropdown.appendChild(dropdownContent);
@@ -694,9 +854,7 @@ func GetInjectionScript() string {
                 if (host === "app.notion.com" || host.endsWith(".notion.com") ||
                     host === "notion.so" || host.endsWith(".notion.so") ||
                     host === "notion.site" || host.endsWith(".notion.site") ||
-                    host === "notionusercontent.com" || host.endsWith(".notionusercontent.com") ||
-                    host === "accounts.google.com" || host === "appleid.apple.com" ||
-                    host === "login.microsoftonline.com" || host === "github.com") {
+                    host === "notionusercontent.com" || host.endsWith(".notionusercontent.com")) {
                     isInternal = true;
                 }
             } catch (err) {}
@@ -799,46 +957,23 @@ func GetInjectionScript() string {
         }
     }
 
-    // 6. Clean Sidebar: Strip Notion Desktop App download promo from Notion sidebar
-    function cleanSidebarPromos() {
-        var sidebar = document.querySelector(".notion-sidebar") || document.querySelector("#notion-app");
-        if (!sidebar) return;
-
-        var items = sidebar.querySelectorAll("a, div[role='button'], div");
-        for (var i = 0; i < items.length; i++) {
-            var el = items[i];
-            var text = (el.textContent || "").trim();
-            if (text === "Notion Desktop" || text === "Aplikasi Notion" || text.indexOf("Download Notion") !== -1 || (el.href && el.href.indexOf("/desktop") !== -1)) {
-                var parent = el.closest("div[role='button']") || el.closest("a") || el;
-                if (parent && parent.style.display !== "none") {
-                    parent.style.setProperty("display", "none", "important");
-                }
-            }
-        }
-    }
-
     if (!window.__gotion_theme_observer__) {
         window.__gotion_theme_observer__ = true;
         if (window.MutationObserver && document.body) {
             var themeObserver = new MutationObserver(function() {
                 syncGotionTheme();
-                cleanSidebarPromos();
             });
-            themeObserver.observe(document.body, { attributes: true, attributeFilter: ["class", "style", "data-theme"], subtree: true });
+            themeObserver.observe(document.body, { attributes: true, attributeFilter: ["class", "data-theme"] });
             if (document.documentElement) {
-                themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "style", "data-theme"] });
+                themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme"] });
             }
         }
         if (window.matchMedia) {
             window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncGotionTheme);
         }
-        setInterval(function() {
-            syncGotionTheme();
-            cleanSidebarPromos();
-        }, 250);
+        setInterval(syncGotionTheme, 500);
     }
     syncGotionTheme();
-    cleanSidebarPromos();
 
     // 6. Automatic Titlebar Counter-Scaling (Keeps Titlebar at fixed physical 38px height during Native Zoom)
     if (!window.__gotion_base_dpr__) {

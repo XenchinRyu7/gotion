@@ -89,3 +89,73 @@ func SaveWindowState(state WindowState) error {
 
 	return os.WriteFile(path, data, 0644)
 }
+
+// SessionConfig holds persistent Notion authentication tokens.
+type SessionConfig struct {
+	TokenV2 string `json:"token_v2"`
+}
+
+func getSessionConfigPath() (string, error) {
+	localAppData := os.Getenv("LOCALAPPDATA")
+	if localAppData == "" {
+		configDir, err := os.UserConfigDir()
+		if err != nil {
+			return "", fmt.Errorf("failed to locate config directory: %w", err)
+		}
+		localAppData = configDir
+	}
+
+	configDir := filepath.Join(localAppData, "Gotion", "config")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create config directory %s: %w", configDir, err)
+	}
+
+	return filepath.Join(configDir, "session.json"), nil
+}
+
+// LoadSessionToken returns the saved session token or empty string.
+func LoadSessionToken() string {
+	path, err := getSessionConfigPath()
+	if err != nil {
+		return ""
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+
+	var session SessionConfig
+	if err := json.Unmarshal(data, &session); err != nil {
+		return ""
+	}
+
+	return session.TokenV2
+}
+
+// SaveSessionToken persists the session token to disk.
+func SaveSessionToken(token string) error {
+	path, err := getSessionConfigPath()
+	if err != nil {
+		return err
+	}
+
+	session := SessionConfig{TokenV2: token}
+	data, err := json.MarshalIndent(session, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to serialize session: %w", err)
+	}
+
+	return os.WriteFile(path, data, 0600)
+}
+
+// ClearSessionToken removes the saved session token.
+func ClearSessionToken() error {
+	path, err := getSessionConfigPath()
+	if err != nil {
+		return err
+	}
+	_ = os.Remove(path)
+	return nil
+}
+

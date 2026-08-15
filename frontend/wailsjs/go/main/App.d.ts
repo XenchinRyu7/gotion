@@ -5,6 +5,8 @@ export function Close():Promise<void>;
 
 export function GetAppVersion():Promise<string>;
 
+export function GetSessionToken():Promise<string>;
+
 export function GetStartURL():Promise<string>;
 
 export function GetUserDataDir():Promise<string>;
@@ -17,6 +19,8 @@ export function HardReload():Promise<void>;
 
 export function IsInternalURL(arg1:string):Promise<boolean>;
 
+export function Logout():Promise<boolean>;
+
 export function Minimise():Promise<void>;
 
 export function OpenExternalURL(arg1:string):Promise<boolean>;
@@ -27,7 +31,13 @@ export function Reload():Promise<void>;
 
 export function ResetZoom():Promise<void>;
 
+export function ReturnToInternalFrontend():Promise<void>;
+
 export function SaveCurrentWindowState():Promise<void>;
+
+export function SetSessionToken(arg1:string):Promise<boolean>;
+
+export function StartBrowserLogin():Promise<string>;
 
 export function ToggleMaximise():Promise<void>;
 

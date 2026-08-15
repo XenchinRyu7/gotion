@@ -33,3 +33,25 @@ func TestSaveAndLoadWindowState(t *testing.T) {
 		t.Errorf("Loaded state %+v did not match saved state %+v", loaded, testState)
 	}
 }
+
+func TestSessionToken(t *testing.T) {
+	testToken := "v02%3Auser_test_token_12345"
+	if err := SaveSessionToken(testToken); err != nil {
+		t.Fatalf("SaveSessionToken failed: %v", err)
+	}
+
+	loaded := LoadSessionToken()
+	if loaded != testToken {
+		t.Errorf("LoadSessionToken() = %q; want %q", loaded, testToken)
+	}
+
+	if err := ClearSessionToken(); err != nil {
+		t.Fatalf("ClearSessionToken failed: %v", err)
+	}
+
+	loadedAfterClear := LoadSessionToken()
+	if loadedAfterClear != "" {
+		t.Errorf("LoadSessionToken() after clear = %q; want empty string", loadedAfterClear)
+	}
+}
+

@@ -2,12 +2,17 @@
 
 const NOTION_APP_URL = "https://app.notion.com";
 
+// Store initial internal Wails URL (handles difference between dev http://localhost:... and build wails://...)
+try {
+    sessionStorage.setItem("gotion_internal_url", window.location.href);
+} catch (e) {}
+
 function closeWindow(e) {
     if (e) e.stopPropagation();
     if (window.runtime && window.runtime.Quit) {
         window.runtime.Quit();
-    } else {
-        window.close();
+    } else if (window.go && window.go.main && window.go.main.App) {
+        window.go.main.App.Close();
     }
 }
 
@@ -15,6 +20,8 @@ function minimizeWindow(e) {
     if (e) e.stopPropagation();
     if (window.runtime && window.runtime.WindowMinimise) {
         window.runtime.WindowMinimise();
+    } else if (window.go && window.go.main && window.go.main.App) {
+        window.go.main.App.Minimise();
     }
 }
 
@@ -22,6 +29,8 @@ function maximizeWindow(e) {
     if (e) e.stopPropagation();
     if (window.runtime && window.runtime.WindowToggleMaximise) {
         window.runtime.WindowToggleMaximise();
+    } else if (window.go && window.go.main && window.go.main.App) {
+        window.go.main.App.ToggleMaximise();
     }
 }
 
@@ -42,7 +51,7 @@ function navigateToNotion() {
     try {
         window.location.replace(NOTION_APP_URL);
     } catch (e) {
-        showError("Failed to initiate navigation to Notion: " + e.message);
+        showError("Failed to connect to Notion: " + e.message);
     }
 }
 
@@ -70,5 +79,5 @@ window.addEventListener("offline", () => {
 
 // Run immediate navigation on DOM load
 window.addEventListener("DOMContentLoaded", () => {
-    setTimeout(navigateToNotion, 50);
+    setTimeout(navigateToNotion, 60);
 });

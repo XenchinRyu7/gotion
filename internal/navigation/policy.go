@@ -22,6 +22,10 @@ var allowedAuthHosts = []string{
 	"login.microsoftonline.com",
 	"login.live.com",
 	"github.com",
+	"okta.com",
+	"auth0.com",
+	"duosecurity.com",
+	"onelogin.com",
 }
 
 // GetStartURL returns the canonical initial URL for Notion.
