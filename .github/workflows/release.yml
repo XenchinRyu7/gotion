@@ -36,18 +36,24 @@ jobs:
         run: |
           go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
           choco install nsis -y
+          "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Build Windows Executable & NSIS Installer
         shell: pwsh
         run: |
+          makensis /VERSION
           wails build -nsis -ldflags "-s -w"
 
       - name: Rename and Prepare Windows Artifacts
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist
-          Copy-Item build\bin\gotion.exe dist\gotion-windows-amd64.exe
-          Copy-Item build\bin\gotion-amd64-installer.exe dist\gotion-windows-amd64-installer.exe
+          if (Test-Path build\bin\gotion.exe) {
+            Copy-Item build\bin\gotion.exe dist\gotion-windows-amd64.exe
+          }
+          if (Test-Path build\bin\gotion-amd64-installer.exe) {
+            Copy-Item build\bin\gotion-amd64-installer.exe dist\gotion-windows-amd64-installer.exe
+          }
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -85,12 +91,15 @@ jobs:
             libgtk-3-dev \
             libwebkit2gtk-4.0-dev \
             libayatana-appindicator3-dev \
+            libfuse2 \
             librsvg2-bin \
             ruby \
             ruby-dev \
             rubygems \
             rpm \
-            desktop-file-utils
+            desktop-file-utils \
+            curl \
+            file
           sudo gem install --no-document fpm
 
       - name: Install Wails CLI
@@ -188,10 +197,11 @@ jobs:
           EOF
           chmod +x AppDir/AppRun
 
-          # Download appimagetool
-          wget -q https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage -O appimagetool
+          # Download appimagetool with redirect support
+          curl -sSL https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -o appimagetool || \
+          curl -sSL https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -o appimagetool
           chmod +x appimagetool
-          ./appimagetool --appimage-extract-and-run AppDir "dist/gotion-${VERSION}-x86_64.AppImage"
+          ARCH=x86_64 ./appimagetool --appimage-extract-and-run AppDir "dist/gotion-${VERSION}-x86_64.AppImage" || true
 
       - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
@@ -223,7 +233,7 @@ jobs:
       - name: Install Wails CLI & create-dmg
         run: |
           go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
-          brew install create-dmg
+          brew install create-dmg || true
 
       - name: Build macOS Universal Bundle
         run: |
@@ -241,16 +251,18 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent build/bin/gotion.app dist/gotion-macos-universal.zip
 
           # Create DMG Image
-          create-dmg \
-            --volname "Gotion Installer" \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --app-drop-link 420 185 \
-            "dist/gotion-${VERSION}-macos-universal.dmg" \
-            build/bin/gotion.app || true
+          if command -v create-dmg &> /dev/null; then
+            create-dmg \
+              --volname "Gotion Installer" \
+              --window-pos 200 120 \
+              --window-size 600 400 \
+              --icon-size 100 \
+              --app-drop-link 420 185 \
+              "dist/gotion-${VERSION}-macos-universal.dmg" \
+              build/bin/gotion.app || true
+          fi
 
-          # Fallback to hdiutil if create-dmg returns notice
+          # Fallback to hdiutil if create-dmg was skipped or failed
           if [ ! -f "dist/gotion-${VERSION}-macos-universal.dmg" ]; then
             hdiutil create -volname "Gotion" -srcfolder build/bin/gotion.app -ov -format UDZO "dist/gotion-${VERSION}-macos-universal.dmg"
           fi
