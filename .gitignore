@@ -22,9 +22,9 @@ build/windows/installer/tmp/
 vendor/
 
 # User Data & Cache Profiles
-profile/
-cache/
-logs/
+/profile/
+/cache/
+/logs/
 *.log
 
 # IDE & OS Specific
