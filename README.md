@@ -58,7 +58,7 @@ The official Notion Desktop client relies on **Electron**, packaging an entire N
 | **Background Telemetry** | Active third-party analytics | **Cleaned & Minimalist** |
 | **Startup Time** | Slow / Cold bundle parsing | **Near-Instant** *(Persistent 300MB Local Disk Cache)* |
 | **Multi-Account Support** | Supported | **Supported** *(Direct workspace switching)* |
-| **Window Frame** | Standard OS Window Chrome | **Custom Frameless Titlebar with Mac-Style Controls** |
+| **Window Frame** | Standard OS Window Chrome | **Custom Frameless Titlebar with Mac/Windows Style Controls** |
 | **Theme Synchronization** | Manual / Desynced Window Titlebar | **Real-Time Dynamic Light & Dark Theme Detection** |
 | **Supported Platforms** | Windows, macOS | **Windows 10/11, Linux (AppImage/Deb/Rpm), macOS** |
 
@@ -67,7 +67,9 @@ The official Notion Desktop client relies on **Electron**, packaging an entire N
 ## Core Features
 
 ### 1. Frameless Window with 8-Directional Native Resizing
+* **Switchable Titlebar Styles:** Choose Mac-style traffic lights or Windows-style right-aligned controls from `Actions -> Title Bar`.
 * **Mac-Style Traffic Lights:** Custom Close (`#ff5f56`), Minimize (`#ffbd2e`), and Maximize/Restore (`#27c93f`) window controls with bidirectional maximize toggling.
+* **Persistent Titlebar Preference:** Selected style is saved in the WebView profile and restored on next launch.
 * **8-Direction Resizing Handles:** Smooth resizing along all edges and corners (`N`, `S`, `E`, `W`, `NE`, `NW`, `SE`, `SW`).
 * **Titlebar Counter-Scaling:** Automatically computes `1 / zoomRatio` to ensure the custom 38px titlebar visually retains its physical dimensions during native engine zoom.
 

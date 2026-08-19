@@ -13,6 +13,11 @@ func TestGetInjectionScript(t *testing.T) {
 
 	expectedSubstrings := []string{
 		"gotion-mac-titlebar",
+		"gotion-titlebar-windows",
+		"gotion-btn-max { order: 2",
+		"restore",
+		"gotion_titlebar_style",
+		"Title Bar: Mac",
 		"gotion-traffic-lights",
 		"gotion-btn-close",
 		"gotion-btn-min",

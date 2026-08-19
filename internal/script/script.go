@@ -189,7 +189,7 @@ func GetInjectionScript() string {
             "    --gt-traffic-border-max: #167a21 !important;",
             "    --gt-blue: #0075de !important;",
             "}",
-            "#gotion-mac-titlebar {",
+             "#gotion-mac-titlebar {",
             "    position: fixed !important;",
             "    top: 0 !important;",
             "    left: 0 !important;",
@@ -209,8 +209,62 @@ func GetInjectionScript() string {
             "    box-sizing: border-box !important;",
             "    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif !important;",
             "    cursor: default !important;",
-            "    transition: background-color 0.15s ease, border-color 0.15s ease !important;",
-            "}",
+             "    transition: background-color 0.15s ease, border-color 0.15s ease !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows {",
+             "    justify-content: flex-start !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-left-group {",
+             "    order: 3 !important;",
+             "    margin-left: auto !important;",
+             "    gap: 0 !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-traffic-lights {",
+             "    flex-direction: row !important;",
+             "    gap: 0 !important;",
+             "    padding: 0 !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-min { order: 1 !important; }",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-max { order: 2 !important; }",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-close { order: 3 !important; }",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-traffic {",
+             "    width: 46px !important;",
+             "    height: 38px !important;",
+             "    border: none !important;",
+             "    border-radius: 0 !important;",
+             "    background: transparent !important;",
+             "    color: var(--gt-text) !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-traffic:hover {",
+             "    background: var(--gt-hover) !important;",
+             "    filter: none !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-close:hover {",
+             "    background: #c42b1c !important;",
+             "    color: #ffffff !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-traffic svg {",
+             "    opacity: 1 !important;",
+             "    width: 10px !important;",
+             "    height: 10px !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-close {",
+             "    background: transparent !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-min,",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-max {",
+             "    background: transparent !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-titlebar-center {",
+             "    order: 2 !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-titlebar-right {",
+             "    order: 1 !important;",
+             "    margin-left: 12px !important;",
+             "}",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-close svg line { stroke: currentColor !important; }",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-min svg line { stroke: currentColor !important; }",
+             "#gotion-mac-titlebar.gotion-titlebar-windows .gotion-btn-max svg polygon { fill: currentColor !important; }",
             "#notion-app {",
             "    position: absolute !important;",
             "    top: 38px !important;",
@@ -488,13 +542,14 @@ func GetInjectionScript() string {
         zoomIn: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>',
         zoomOut: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>',
         resetZoom: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
-        maximize: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>',
+         maximize: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><rect x="1.5" y="1.5" width="9" height="9"/></svg>',
+         restore: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><path d="M3.5 3.5h6v6h-6z"/><path d="M2.5 8.5h-1v-6h6v1"/></svg>',
         user: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
         quit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
     };
 
     // Zoom Manager (Client-side CSS zoom level)
-    var zoomLevels = [0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.25, 1.35, 1.5, 1.75, 2.0];
+     var zoomLevels = [0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.25, 1.35, 1.5, 1.75, 2.0];
     var zoomIndex = 6; // default 1.0
 
     try {
@@ -552,7 +607,49 @@ func GetInjectionScript() string {
 
     window.__gotion_triggerZoomIn = triggerZoomIn;
     window.__gotion_triggerZoomOut = triggerZoomOut;
-    window.__gotion_triggerResetZoom = triggerResetZoom;
+     window.__gotion_triggerResetZoom = triggerResetZoom;
+
+     var titlebarStyle = "mac";
+     try {
+         var savedTitlebarStyle = localStorage.getItem("gotion_titlebar_style");
+         if (savedTitlebarStyle === "windows") titlebarStyle = "windows";
+     } catch(e) {}
+
+     function applyTitlebarStyle() {
+         var bar = document.getElementById("gotion-mac-titlebar");
+         if (!bar) return;
+         bar.classList.toggle("gotion-titlebar-windows", titlebarStyle === "windows");
+         bar.setAttribute("data-titlebar-style", titlebarStyle);
+         var switchItem = document.getElementById("gotion-titlebar-switch");
+         if (switchItem) {
+             switchItem.querySelector("span").textContent = "Title Bar: " + (titlebarStyle === "windows" ? "Windows" : "Mac");
+         }
+     }
+
+     function toggleTitlebarStyle() {
+         titlebarStyle = titlebarStyle === "windows" ? "mac" : "windows";
+         try { localStorage.setItem("gotion_titlebar_style", titlebarStyle); } catch(e) {}
+         applyTitlebarStyle();
+         showGotionToast("Title bar: " + (titlebarStyle === "windows" ? "Windows" : "Mac"));
+     }
+
+     function syncMaximiseIcon() {
+         var btn = document.querySelector(".gotion-btn-max");
+         if (!btn) return;
+         var isMaximised = false;
+         try {
+             if (window.runtime && window.runtime.WindowIsMaximised) {
+                 isMaximised = window.runtime.WindowIsMaximised();
+             }
+         } catch(e) {}
+         if (isMaximised && typeof isMaximised.then === "function") {
+             isMaximised.then(function(value) {
+                 btn.innerHTML = value ? icons.restore : icons.maximize;
+             });
+         } else {
+             btn.innerHTML = isMaximised ? icons.restore : icons.maximize;
+         }
+     }
 
     // Apply saved zoom on startup
     setTimeout(applyZoom, 200);
@@ -598,14 +695,14 @@ func GetInjectionScript() string {
         var leftGroup = document.createElement("div");
         leftGroup.className = "gotion-left-group gotion-no-drag";
 
-        var trafficLights = document.createElement("div");
+         var trafficLights = document.createElement("div");
         trafficLights.className = "gotion-traffic-lights";
 
         // Close
         var btnClose = document.createElement("button");
-        btnClose.className = "gotion-btn-traffic gotion-btn-close";
+         btnClose.className = "gotion-btn-traffic gotion-btn-close";
         btnClose.title = "Close (Ctrl+Q / Alt+F4)";
-        btnClose.innerHTML = '<svg width="6" height="6" viewBox="0 0 6 6"><line x1="1" y1="1" x2="5" y2="5" stroke="#4d0000" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="1" x2="1" y2="5" stroke="#4d0000" stroke-width="1.2" stroke-linecap="round"/></svg>';
+         btnClose.innerHTML = '<svg width="6" height="6" viewBox="0 0 6 6"><line x1="1" y1="1" x2="5" y2="5" stroke="#4d0000" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="1" x2="1" y2="5" stroke="#4d0000" stroke-width="1.2" stroke-linecap="round"/></svg>';
         btnClose.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -627,12 +724,13 @@ func GetInjectionScript() string {
         var btnMax = document.createElement("button");
         btnMax.className = "gotion-btn-traffic gotion-btn-max";
         btnMax.title = "Maximize / Restore";
-        btnMax.innerHTML = '<svg width="6" height="6" viewBox="0 0 6 6"><polygon points="1,1 5,1 1,5" fill="#004d00"/><polygon points="5,5 1,5 5,1" fill="#004d00"/></svg>';
-        btnMax.onclick = function(e) {
+         btnMax.innerHTML = icons.maximize;
+         btnMax.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            doToggleMaximise();
-        };
+             doToggleMaximise();
+             setTimeout(syncMaximiseIcon, 100);
+         };
 
         trafficLights.appendChild(btnClose);
         trafficLights.appendChild(btnMin);
@@ -725,7 +823,10 @@ func GetInjectionScript() string {
         divider2.className = "gotion-menu-divider";
         dropdownContent.appendChild(divider2);
 
-        dropdownContent.appendChild(createMenuItem(icons.maximize, "Maximize / Restore", "F11", function() { doToggleMaximise(); }));
+         dropdownContent.appendChild(createMenuItem(icons.maximize, "Maximize / Restore", "F11", function() { doToggleMaximise(); }));
+         var titlebarSwitch = createMenuItem(icons.maximize, "Title Bar: Mac", "", toggleTitlebarStyle);
+         titlebarSwitch.id = "gotion-titlebar-switch";
+         dropdownContent.appendChild(titlebarSwitch);
         dropdownContent.appendChild(createMenuItem(icons.user, "Switch Account / Login", "", function() {
             if (window.go && window.go.main && window.go.main.App && window.go.main.App.Logout) {
                 window.go.main.App.Logout();
@@ -754,8 +855,13 @@ func GetInjectionScript() string {
         bar.appendChild(center);
         bar.appendChild(rightGroup);
 
-        document.documentElement.appendChild(bar);
-    }
+         document.documentElement.appendChild(bar);
+         applyTitlebarStyle();
+         syncMaximiseIcon();
+     }
+
+     applyTitlebarStyle();
+     syncMaximiseIcon();
 
     // 3. Inject 8 Native Window Resize Handles
     var resizeHandles = [
