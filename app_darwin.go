@@ -7,6 +7,7 @@ package main
 #cgo LDFLAGS: -framework CoreGraphics -framework CoreFoundation
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <stdint.h>
 #include <mach/mach.h>
 #if __has_include(<mach/task.h>)
 #include <mach/task.h>
@@ -14,8 +15,6 @@ package main
 #if __has_include(<mach/task_info.h>)
 #include <mach/task_info.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
 
 // sendCGEventScroll sends a scroll wheel event to simulate Ctrl+Wheel for zoom
 void sendCGEventScroll(int32_t deltaY) {
@@ -26,7 +25,8 @@ void sendCGEventScroll(int32_t deltaY) {
         deltaY
     );
     if (scrollEvent) {
-        CGEventPost(kCGHIDEventTap, scrollEvent);
+        CGEventSetFlags(scrollEvent, kCGEventFlagMaskControl);
+        CGEventPost(kCGSessionEventTap, scrollEvent);
         CFRelease(scrollEvent);
     }
 }
